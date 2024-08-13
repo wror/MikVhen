@@ -89,6 +89,13 @@ def times(request):
         open_time = get_open_time(zman, day_param)
         close_time = get_close_time(zman, day_param, open_time)
 
+    now = datetime.now(tz=ZoneInfo(settings.TIME_ZONE))
+    if today().weekday() == day_dict.get(day_param) and now > open_time:
+        return render(request, "too_late.html", {
+        "day":day_param,
+        "zman":nice_time(zman)
+    })
+
     if first_come_first_served:
         appointment_minutes = friday_appointment_minutes
         prep_param = ""
@@ -101,7 +108,7 @@ def times(request):
     while rounded_best_time < best_time_today:
         rounded_best_time += timedelta(minutes=appointment_minutes)
     if later_param:
-        candidate = combine(start, time_from_param(later_param))
+        candidate = combine(start, time_from_param(later_param)) + timedelta(minutes=appointment_minutes)
         earlier_available = True
     elif not earlier_param and open_time < rounded_best_time:
         candidate = rounded_best_time
@@ -117,12 +124,12 @@ def times(request):
         if candidate+timedelta(minutes=prep_minutes_at_close[prep_param]) > close_time:
             later_available = False
             break
+        if len(times) == 3:
+            break
         if candidate+timedelta(minutes=prep_minutes[prep_param]) >= zman:
             if candidate not in appointment_times:
                 times.append(candidate)
                 if first_come_first_served:
-                    break
-                if len(times) == 3:
                     break
         candidate = candidate + timedelta(minutes=appointment_minutes)
 
