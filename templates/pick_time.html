@@ -43,4 +43,9 @@ Please choose a time.
 <br/>
 {% endif %}
 The earliest zman for tvilah is {{ zman }}.
+{% if not first_come_first_served %}
+<br/>
+<br/>
+Regular closing time is {{ closing }}.
+{% endif %}
 {% include "footer.html" %}

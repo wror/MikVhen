@@ -16,7 +16,6 @@ except Exception:
     exception("Could not import twilio, will not be able to sms")
 
 #configurable values
-
 best_time = time(18, 0)
 weekday_appointment_minutes = 10
 friday_appointment_minutes = 5
@@ -34,6 +33,7 @@ nonfriday_total_minutes = 2*60+30
 friday_total_minutes = 60
 timeout_seconds = 5*60
 prep_minutes = {"bath":30, "shower":10, "":5}
+prep_type = {v: k or "athome" for k, v in prep_minutes.items()}
 prep_minutes_at_close = {"bath":50, "shower":25, "":15}
 #TODO table with key-value pairs in database, how to trigger reload?
 
@@ -93,7 +93,8 @@ def times(request):
     if today().weekday() == day_dict.get(day_param) and now > open_time:
         return render(request, "too_late.html", {
         "day":day_param,
-        "zman":nice_time(zman)
+        "zman":nice_time(zman),
+        "closing":nice_time(close_time)
     })
 
     if first_come_first_served:
@@ -143,6 +144,7 @@ def times(request):
         "contact":contact_param, #pass it through so that people can still use without cookies
         "prep":prep_param,
         "zman":nice_time(zman),
+        "closing":nice_time(close_time),
         "later_available":later_available,
         "earlier_available":earlier_available,
         "first_come_first_served":first_come_first_served,
@@ -241,9 +243,9 @@ def save(request):
 def send_sms_confirm(date: str, time: str, contact: str):
     if not hasattr(settings, 'TWILIO_SID'):
         return
-    client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
     try:
-        client.messages.create(
+        sms_client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+        sms_client.messages.create(
             body=f"Confirmed! Your appointment is {time} PM {date}",
             from_=settings.TWILIO_SMS_SENDER,
             to=contact,
@@ -252,8 +254,11 @@ def send_sms_confirm(date: str, time: str, contact: str):
         exception("Could not sms a confirmation")
 
 def send_sms_log(date: str, time: str, contact: str, alert: bool):
+    if not hasattr(settings, 'TWILIO_SID'):
+        return
     try:
-        client.messages.create(
+        sms_client = Client(settings.TWILIO_SID, settings.TWILIO_AUTH_TOKEN)
+        sms_client.messages.create(
             body=(alert and "ALERT! " or "")+f"{contact} scheduled for {date} {time} PM",
             from_=settings.TWILIO_SMS_SENDER,
             to=settings.TWILIO_SMS_LOG_RECIPIENT,
@@ -273,7 +278,7 @@ def attendant(request):
     formatted_appointments = [{
         "day":nice_date(localize(a)),
         "arrival_time":nice_time(localize(a)),
-        "tvila_time":nice_time(localize(a)+timedelta(minutes=a.minutes_offset)),
+        "prep_type":prep_type[a.minutes_offset],
         "contact":a.contact,
         "payment":a.payment,
         "notes":a.notes,

@@ -1,0 +1,19 @@
+{% include "header.html" %}
+{% if debug %}
+{{ debug }}
+<br/>
+<br/>
+{% endif %}
+{{ day }} - for a different day, <a href="/mikvah/">click here</a>.
+<br/>
+<br/>
+The mikvah has opened already, please call regarding an appointment today.
+<br/>
+<br/>
+The earliest zman for tvilah is {{ zman }}.
+{% if not first_come_first_served %}
+<br/>
+<br/>
+Regular closing time is {{ closing }}.
+{% endif %}
+{% include "footer.html" %}

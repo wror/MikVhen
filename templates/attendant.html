@@ -1,8 +1,9 @@
 {% include "header.html" %}
+{{ appointments|length }} appointments
 <table class="table">
-<tr><th>day</th><th>arrival</th><th>estimated tvilah</th><th>contact</th><th>payment</th><th>notes</th></tr>
+<tr><th>#</th><th>day</th><th>arrival</th><th>prep type</th><th>contact</th><th>payment</th><th>notes</th></tr>
 {% for a in appointments %}
-<tr><td>{{ a.day}}</td><td>{{ a.arrival_time }}</td><td>{{ a.tvila_time }}</td><td>{{ a.contact }}</td><td>{{ a.payment }}</td><td>{{ a.notes }}</td></tr>
+<tr><td>{{ forloop.counter }}</td><td>{{ a.day}}</td><td>{{ a.arrival_time }}</td><td>{{ a.prep_type }}</td><td>{{ a.contact }}</td><td>{{ a.payment }}</td><td>{{ a.notes }}</td></tr>
 {% endfor %}
 </table>
 <br/>
